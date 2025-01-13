@@ -49,7 +49,7 @@ class TestIconQuestion(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             print("Двойной клик обнаружен!")  # Отладочный вывод
             # Показать окно с вопросом при двойном клике
-            if self.creator.is_open_quest:
+            if not self.creator.is_open_quest:
                 self.question.show()
                 self.question.raise_()  # Форсируем окно на передний план
                 self.question.activateWindow()  # Активируем окно, чтобы оно получило фокус
@@ -59,5 +59,21 @@ class TestIconQuestion(QWidget):
                 print(f"Размер окна: {self.question.size()}")
                 self.question.move(100, 100)
             else:
-                QMessageBox.warning(self, 'Окно вопроса уже открыто. Для продолжения закройте его.')
+                QMessageBox.warning(self, 'Ошибка', 'Окно вопроса уже открыто. Для продолжения закройте его.')
+
+    def set_question_maket(self, maket_name):
+        """Обновляет макет вопроса для этой иконки в зависимости от выбора."""
+        # В зависимости от имени выбранного макета обновляем экземпляр `self.question`
+        if maket_name == "Запись ответа":
+            self.question.forced_close()
+            self.question = QuestionUiInputAnswer(self, self)
+        elif maket_name == "Выбор варианта(ов) ответа(ов)":
+            self.question.forced_close()
+            self.question = QuestionUiChoiceAnswer(self, self)
+        elif maket_name == "Развернутый ответ (проверяется вручную)":
+            self.question.forced_close()
+            self.question = QuestionUiOpenAnswer(self, self)
+        else:
+            print("Неизвестный макет вопроса")
+            print(maket_name)
 

@@ -73,6 +73,8 @@ class QuestionUiChoiceAnswer(Ui_Form, QMainWindow):
                 (answers_string, self.icon_question.creator.student_id)
             )
             self.icon_question.con.commit()
+            self.icon_question.creator.update_window_question.emit()
+
             self.forced_close()
 
         else:
@@ -83,6 +85,8 @@ class QuestionUiChoiceAnswer(Ui_Form, QMainWindow):
             )
             self.icon_question.con.commit()
             QMessageBox.information(self, 'Сохранение', 'Ответ успешно сохранен!')
+            self.icon_question.creator.update_window_question.emit()
+
             self.forced_close()
 
         self.is_saved = True  # Устанавливаем флаг сохранения

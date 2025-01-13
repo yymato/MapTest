@@ -58,6 +58,8 @@ class QuestionUiInputAnswer(Ui_Form, QMainWindow):
             self.icon_question.con.commit()
 
             self.forced_close()
+            self.icon_question.creator.update_window_question.emit()
+
             return
 
         # Добавляем новую запись в базу данных
@@ -70,6 +72,8 @@ class QuestionUiInputAnswer(Ui_Form, QMainWindow):
         # Уведомляем пользователя об успешном сохранении
         QMessageBox.information(self, 'Сохранение', 'Вопрос успешно сохранен!')
         self.is_saved = True
+        self.icon_question.creator.update_window_question.emit()
+
         self.forced_close()
 
     def forced_close(self):

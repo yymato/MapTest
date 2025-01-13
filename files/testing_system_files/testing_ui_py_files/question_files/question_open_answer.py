@@ -45,6 +45,8 @@ class QuestionUiOpenAnswer(QMainWindow, Ui_Form):
                 (answer_text, self.icon_question.creator.student_id)
             )
             self.icon_question.con.commit()  # Сохраняем изменения в базе данных
+            self.icon_question.creator.update_window_question.emit()
+
             self.forced_close()
 
             return
@@ -59,6 +61,8 @@ class QuestionUiOpenAnswer(QMainWindow, Ui_Form):
         # Сообщение об успешном сохранении
         QMessageBox.information(self, 'Сохранение', 'Вопрос успешно сохранен!')
         self.is_saved = True  # Устанавливаем флаг сохранения
+        self.icon_question.creator.update_window_question.emit()
+
         self.forced_close()
 
     def forced_close(self):
@@ -88,10 +92,7 @@ class QuestionUiOpenAnswer(QMainWindow, Ui_Form):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            # Проверим, видно ли оно на экране
-            print(f"Окно QuestionWindow видимо: {self.question.isVisible()}")
-            print(f"Размер окна: {self.question.size()}")
-            self.question.move(100, 100)
+            self.icon_question.creator.update_window_question.emit()
             event.accept()  # Подтверждаем закрытие окна
         else:
             event.ignore()  # Отменяем закрытие окна

@@ -4,7 +4,7 @@ from files.testing_system_files.testing_ui_py_files.question_files.question_inpu
 from files.testing_system_files.testing_ui_py_files.question_files.question_open_answer import QuestionUiOpenAnswer
 from PyQt6.QtCore import QPoint
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QLabel
+from PyQt6.QtWidgets import QWidget, QLabel, QMessageBox
 from PyQt6.QtGui import QPixmap, QMouseEvent
 
 
@@ -49,27 +49,15 @@ class TestIconQuestion(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             print("Двойной клик обнаружен!")  # Отладочный вывод
             # Показать окно с вопросом при двойном клике
-            self.question.show()
-            self.question.raise_()  # Форсируем окно на передний план
-            self.question.activateWindow()  # Активируем окно, чтобы оно получило фокус
+            if self.creator.is_open_quest:
+                self.question.show()
+                self.question.raise_()  # Форсируем окно на передний план
+                self.question.activateWindow()  # Активируем окно, чтобы оно получило фокус
+                self.creator.update_window_question.emit()
+                # Проверим, видно ли оно на экране
+                print(f"Окно QuestionWindow видимо: {self.question.isVisible()}")
+                print(f"Размер окна: {self.question.size()}")
+                self.question.move(100, 100)
+            else:
+                QMessageBox.warning(self, 'Окно вопроса уже открыто. Для продолжения закройте его.')
 
-            # Проверим, видно ли оно на экране
-            print(f"Окно QuestionWindow видимо: {self.question.isVisible()}")
-            print(f"Размер окна: {self.question.size()}")
-            self.question.move(100, 100)
-
-    def set_question_maket(self, maket_name):
-        """Обновляет макет вопроса для этой иконки в зависимости от выбора."""
-        # В зависимости от имени выбранного макета обновляем экземпляр `self.question`
-        if maket_name == "Запись ответа":
-            self.question.forced_close()
-            self.question = QuestionUiInputAnswer(self, self)
-        elif maket_name == "Выбор варианта(ов) ответа(ов)":
-            self.question.forced_close()
-            self.question = QuestionUiChoiceAnswer(self, self)
-        elif maket_name == "Развернутый ответ (проверяется вручную)":
-            self.question.forced_close()
-            self.question = QuestionUiOpenAnswer(self, self)
-        else:
-            print("Неизвестный макет вопроса")
-            print(maket_name)

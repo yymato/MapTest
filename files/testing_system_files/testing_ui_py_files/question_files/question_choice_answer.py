@@ -1,6 +1,6 @@
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QMainWindow, QMessageBox
-
+import random
 # Импорт интерфейса формы выбора ответа
 from files.testing_system_files.testing_ui_py_files.question_ui_py_files.question_ui_choice_answer import Ui_Form
 
@@ -36,7 +36,7 @@ class QuestionUiChoiceAnswer(Ui_Form, QMainWindow):
         # Объединяем списки правильных и неправильных ответов
         variants = correct + incorrect
         # Перемешиваем варианты, чтобы не было предсказуемого порядка
-        import random
+
         random.shuffle(variants)
 
         # Добавляем варианты ответов в сетку
@@ -114,6 +114,7 @@ class QuestionUiChoiceAnswer(Ui_Form, QMainWindow):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
+            self.icon_question.creator.update_window_question.emit()
             event.accept()  # Закрываем окно
         else:
             event.ignore()  # Отменяем закрытие

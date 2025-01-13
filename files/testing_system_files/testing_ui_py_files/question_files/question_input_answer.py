@@ -101,6 +101,7 @@ class QuestionUiInputAnswer(Ui_Form, QMainWindow):
 
         # Если пользователь подтвердил закрытие
         if reply == QMessageBox.StandardButton.Yes:
+            self.icon_question.creator.update_window_question.emit()
             event.accept()  # Закрываем окно
         else:
             event.ignore()  # Отменяем закрытие окна

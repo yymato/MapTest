@@ -14,6 +14,7 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
     # Сигналы для управления событиями окна
     close_window = pyqtSignal()  # Сигнал для закрытия окна
     start_test = pyqtSignal()  # Сигнал для начала теста
+    update_window_question = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -27,6 +28,7 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
         self.path_to_result = ''
         self.student_id = 0  # ID текущего участника теста
         self.icon_path = resource_path("files/images/icon.png")  # Путь к иконке вопроса
+        self.is_open_quest = False
         self.test_con = None  # Соединение с базой данных теста
         self.result_con = None  # Соединение с базой данных результатов
 
@@ -36,6 +38,8 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
 
         # Привязка сигнала начала теста к обработчику установки ФИО студента
         self.start_test.connect(self.set_student_fio)
+
+        self.update_window_question.connect(self.quest_signal)
 
     def connect_to_bds(self):
         # Информация для выбора файла теста
@@ -177,3 +181,6 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
             self.close_window.emit()
         else:
             event.ignore()
+
+    def quest_signal(self):
+        self.is_open_quest = not self.is_open_quest

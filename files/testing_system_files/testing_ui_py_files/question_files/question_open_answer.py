@@ -88,6 +88,10 @@ class QuestionUiOpenAnswer(QMainWindow, Ui_Form):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
+            # Проверим, видно ли оно на экране
+            print(f"Окно QuestionWindow видимо: {self.question.isVisible()}")
+            print(f"Размер окна: {self.question.size()}")
+            self.question.move(100, 100)
             event.accept()  # Подтверждаем закрытие окна
         else:
             event.ignore()  # Отменяем закрытие окна

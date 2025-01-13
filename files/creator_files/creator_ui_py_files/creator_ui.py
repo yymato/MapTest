@@ -47,8 +47,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Создание теста"))
-        self.image_label.setText(_translate("MainWindow", "Нажмите, чтобы выбрать картику"))
+        self.image_label.setText(_translate("MainWindow", "Нажмите, чтобы выбрать картинку"))
         self.load_test_button.setText(_translate("MainWindow", "Загрузить тест"))
         self.updated_question_button.setText(_translate("MainWindow", "Развернутый ответ"))
         self.input_question_button.setText(_translate("MainWindow", "Ввод ответа"))
-        self.choose_variant_question_button.setText(_translate("MainWindow", "Выбор варината(ов)"))
+        self.choose_variant_question_button.setText(_translate("MainWindow", "Выбор варинта(ов)"))

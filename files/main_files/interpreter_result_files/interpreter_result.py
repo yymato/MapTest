@@ -29,14 +29,14 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
 
         self.is_terminated = False
 
-
     def choose_question_path(self):
         test_db_path = QFileDialog.getOpenFileName(self, "Открыть файл с тестом", "", "SQL Files (*.sqlite)")[0]
         try:
             conn = sqlite3.connect(test_db_path)
             tables = conn.cursor().execute('SELECT name FROM sqlite_master WHERE type="table"')
-            quest_reference = {'type', 'sqlite_sequence', 'question_data', 'main_ids', 'choice_question_data', 'main_image',
-                     'question_values'}
+            quest_reference = {'type', 'sqlite_sequence', 'question_data', 'main_ids', 'choice_question_data',
+                               'main_image',
+                               'question_values'}
             if set(map(lambda table: str(*table), tables)) != quest_reference:
                 raise PathError
             else:
@@ -60,6 +60,7 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, 'Ошибка', 'Не корректный файл. Возможно, вы выбрали вопросы, а не ответы.')
 
         self.check_path()
+
     def choose_result_path(self):
         self.res_path = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "Excel Files (*.xls, *.xlsx)")[0]
         self.check_path()

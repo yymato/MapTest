@@ -152,7 +152,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="interpreter_button">
        <property name="text">
         <string>Интерпретировать результат</string>
        </property>

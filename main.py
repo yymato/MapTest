@@ -53,7 +53,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def interpreter_result(self):
         if not self.is_open:
-            self.interpreter = InterpreterResultWindow
+            self.interpreter = InterpreterResultWindow()
             self.interpreter.close_window.connect(self.closed_window)
             self.interpreter.show()
             self.is_open = True

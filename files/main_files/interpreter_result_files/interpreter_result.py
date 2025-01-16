@@ -1,10 +1,12 @@
-from msilib.schema import tables
-
 import xlsxwriter
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QFileDialog
 from files.main_files.interpreter_result_files.interpreter_result_ui_py.interpreter_result_ui import Ui_MainWindow
 import sqlite3
+
+
+class PathError(Exception):
+    pass
 
 
 class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
@@ -19,44 +21,57 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
         self.res_path = None
 
         self.choose_question_path_button.clicked.connect(self.choose_question_path)
-
         self.choose_answer_path_button.clicked.connect(self.choose_answer_path)
-
         self.choose_result_path_button.clicked.connect(self.choose_result_path)
+
+        self.get_result_button.setEnabled(False)
+        self.get_result_button.clicked.connect(self.get_result)
+
+        self.is_terminated = False
+
 
     def choose_question_path(self):
         test_db_path = QFileDialog.getOpenFileName(self, "Открыть файл с тестом", "", "SQL Files (*.sqlite)")[0]
-        # Проверям таблицу на то, что это тест
         try:
             conn = sqlite3.connect(test_db_path)
             tables = conn.cursor().execute('SELECT name FROM sqlite_master WHERE type="table"')
-            quest_reference = set(['type', 'sqlite_sequence', 'question_data', 'main_ids', 'choice_question_data', 'main_image',
-                     'question_values'])
-            if set(*tables) & quest_reference != quest_reference:
-                raise Exception
-        except:
+            quest_reference = {'type', 'sqlite_sequence', 'question_data', 'main_ids', 'choice_question_data', 'main_image',
+                     'question_values'}
+            if set(map(lambda table: str(*table), tables)) != quest_reference:
+                raise PathError
+            else:
+                self.test_db_path = test_db_path
+        except PathError:
             QMessageBox.warning(self, 'Ошибка', 'Не корректный файл. Возможно, вы выбрали ответы, а не вопросы.')
+
+        self.check_path()
 
     def choose_answer_path(self):
         answers_db_path = QFileDialog.getOpenFileName(self, "Открыть файл с ответами", "", "SQL Files (*.sqlite)")[0]
         try:
             conn = sqlite3.connect(answers_db_path)
             tables = conn.cursor().execute('SELECT name FROM sqlite_master WHERE type="table"')
-            answer_reference = set(['type', 'sqlite_sequence', 'answers', 'students'])
-            if set(*tables) & answer_reference != answer_reference:
-                raise Exception
-        except:
+            answer_reference = {'type', 'sqlite_sequence', 'answers', 'students'}
+            if set(map(lambda table: str(*table), tables)) != answer_reference:
+                raise PathError
+            else:
+                self.answers_db_path = answers_db_path
+        except PathError:
             QMessageBox.warning(self, 'Ошибка', 'Не корректный файл. Возможно, вы выбрали вопросы, а не ответы.')
 
+        self.check_path()
     def choose_result_path(self):
-        res_path = QFileDialog.getOpenFileName(self, "Сохранить файл", "", "SQL Files (*.sqlite)")[0]
-        try:
-            conn = sqlite3.connect(res_path)
-            tables = conn.cursor().execute('SELECT name FROM sqlite_master WHERE type="table"')
-        except:
-            pass
+        self.res_path = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "Excel Files (*.xls, *.xlsx)")[0]
+        self.check_path()
+
+    def check_path(self):
+        if self.test_db_path and self.answers_db_path and self.res_path:
+            self.get_result_button.setEnabled(True)
+        else:
+            self.get_result_button.setEnabled(False)
 
     def get_result(self):
+
         conn_test = sqlite3.connect(self.test_db_path)
         cursor_test = conn_test.cursor()
 
@@ -93,18 +108,16 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
                 'type': q[1],
                 'value': question_values.get(q[0], 1)  # По умолчанию вес 1
             }
-        print(question_data)
         # ФИО студентов
         student_fio_id = {}
         for i in cursor_answers.execute('SELECT * FROM students').fetchall():
             student_fio_id[i[0]] = i[1]
 
         # Создаем Excel
-        workbook = xlsxwriter.Workbook(
-            QFileDialog.getSaveFileName(self, "Сохранение результата", "", "Excel files (*.xlsx *.xls)")[0])
+        workbook = xlsxwriter.Workbook(self.res_path)
         format_correct = workbook.add_format({'bg_color': '#C6EFCE'})
         format_incorrect = workbook.add_format({'bg_color': '#FFC7CE'})
-        format_partial = workbook.add_format({'bg_color': '#FFEB9C'})  # Желтый для частично правильных
+        format_partial = workbook.add_format({'bg_color': '#FFEB9C'})
 
         # --- Лист 1: Типы 2 и 3 ---
         sheet1 = workbook.add_worksheet('Автоматическая проверка')
@@ -130,7 +143,6 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
         for student_id, question_main_id, student_answer in answers:
             if question_main_id in question_ids_type2_3:
                 student_answers[student_id][question_main_id] = student_answer
-        print(student_answers)
 
         for student_id, answers_dict in student_answers.items():
             student_fio = student_fio_id.get(student_id, 'Неизвестно')
@@ -234,16 +246,18 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
             sheet3.write(row, 2, question_data[q[0]]['value'])
             row += 1
 
+        QMessageBox.information(self, 'Сохранение', 'Успешно!')
+
         # Закрываем файл
         workbook.close()
         conn_test.close()
         conn_answers.close()
 
-    def forced_close(self):
+    def terminated(self):
         """
         Принудительно закрывает окно без проверки.
         """
-        self.is_forced_close = True
+        self.is_terminated = True
         self.close()
 
     def closeEvent(self, event):
@@ -251,8 +265,8 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
         Обработчик события закрытия окна. Спрашивает подтверждение у пользователя, если
         окно закрывается не принудительно.
         """
-        if self.is_forced_close:
-            self.is_forced_close = False
+        if self.is_terminated:
+            self.is_terminated = False
             event.accept()  # Закрываем окно без предупреждения
             return
 

@@ -20,7 +20,7 @@ class ProjectCreateWindow(Ui_MainWindow, QMainWindow):
         self.choose_project_path_button.clicked.connect(self.choose_project_path)
         self.choose_image_path_button.clicked.connect(self.choose_image_path)
         self.accept_button.clicked.connect(self.save_project)
-        self.cancel_button.clicked.connect(self.cancel)
+        self.cancel_button.clicked.connect(self.close)
 
     def choose_project_path(self):
         self.project_path = QFileDialog.getSaveFileName(self, 'Сохранить тест',
@@ -51,8 +51,6 @@ class ProjectCreateWindow(Ui_MainWindow, QMainWindow):
     def get_name_project(self):
         return self.name_line_edit.text()
 
-    def cancel(self):
-        self.cancel_save_project.emit()
-
-    def closeEvent(self):
+    def closeEvent(self, event):
+        event.accept()
         self.cancel_save_project.emit()

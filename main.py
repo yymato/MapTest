@@ -1,11 +1,11 @@
 import sys
-import sqlite3
-import xlsxwriter
-from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
-from files.testing_system_files.main_testing_window import MainTestingWindow
-from files.main_files.ui_py_files.main_ui_V1 import Ui_MainWindow
+
+from PyQt6.QtWidgets import QApplication, QMainWindow
+
 from files.creator_files.creator import CreatorWindow
 from files.main_files.interpreter_result_files.interpreter_result import InterpreterResultWindow
+from files.main_files.ui_py_files.main_ui_V1 import Ui_MainWindow
+from files.testing_system_files.main_testing_window import MainTestingWindow
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -50,8 +50,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.is_open:
             self.test = MainTestingWindow(self)
             self.test.close_window.connect(self.closed_window)
-            self.test.connect_to_bds()
-            self.test.show()
             self.is_open = True
 
     def get_result(self):

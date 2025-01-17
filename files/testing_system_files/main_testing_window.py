@@ -2,12 +2,14 @@ import shutil
 import sqlite3
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QMessageBox
+
+from files.main_files.compiled_path_fuction import resource_path
 from files.main_files.database.database_images import load_pixmap_from_db
 from files.testing_system_files.test_question import TestIconQuestion
-from files.testing_system_files.testing_ui_py_files.input_fio import InputFIO
 from files.testing_system_files.testing_ui_files.main_test_window_ui import Ui_MainWindow
-from files.main_files.compiled_path_fuction import resource_path
+from files.testing_system_files.testing_ui_py_files.input_fio import InputFIO
+from files.testing_system_files.testing_ui_py_files.setting_test import SettingsTestWindow
 
 
 class MainTestingWindow(Ui_MainWindow, QMainWindow):
@@ -23,14 +25,21 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
         # Привязка кнопки завершения теста к обработчику
         self.finish_test_button.clicked.connect(self.end_test)
 
+        self.settings_test = SettingsTestWindow()
+        self.settings_test.cancel_start_test.connect(self.terminated)
+        self.settings_test.successful_start_test.connect(self.get_path)
+        self.settings_test.show()
+
         # Инициализация атрибутов для хранения путей, идентификаторов и соединений с базой данных
-        self.path_to_test = ''
-        self.path_to_result = ''
+        self.path_to_test = None
+        self.path_to_result = None
         self.student_id = 0  # ID текущего участника теста
         self.icon_path = resource_path("files/images/icon.png")  # Путь к иконке вопроса
         self.is_open_quest = False
         self.test_con = None  # Соединение с базой данных теста
         self.result_con = None  # Соединение с базой данных результатов
+
+        self.terminate = False
 
         # Создание и скрытие окна ввода ФИО
         self.get_fio_window = InputFIO(self, self)
@@ -41,31 +50,23 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
 
         self.update_window_question.connect(self.quest_signal)
 
+    def get_path(self):
+        self.path_to_test = self.settings_test.get_test_db_path()
+        self.path_to_result = self.settings_test.get_answers_db_path()
+
+        self.connect_to_bds()
+
     def connect_to_bds(self):
-        # Информация для выбора файла теста
-        QMessageBox.information(self, "Выбор теста", "Выберите файл с тестом")
-        self.path_to_test = QFileDialog.getOpenFileName(self, "Открыть файл", "", "SQL Files (*.sqlite)")[0]
-
-        if not self.path_to_test:
-            QMessageBox.warning(self, "Выбор теста", "Файл не найден")
-            return
-
-        # Информация для выбора места сохранения результатов
-        QMessageBox.information(self, "Сохранение результатов", "Выберите куда сохранять результаты")
-        self.path_to_result = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "SQL Files (*.sqlite)")[0]
-
-        if not self.path_to_test:
-            QMessageBox.warning(self, "Сохранение результатов", "Указан не корректный путь")
-            return
-
         # Копирование шаблона базы данных для результатов
-        shutil.copyfile(resource_path('files/main_files/database/result_test.sqlite'), self.path_to_result, follow_symlinks=True)
+        shutil.copyfile(resource_path('files/main_files/database/result_test.sqlite'),
+                        self.path_to_result, follow_symlinks=True)
 
         # Установка соединений с базами данных
         self.test_con = sqlite3.connect(self.path_to_test)
         self.result_con = sqlite3.connect(self.path_to_result)
 
         # Запуск окна ввода ФИО студента
+        self.show()
         self.get_student_fio()
 
     def get_student_fio(self):
@@ -166,7 +167,16 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
             self.result_con.commit()
             self.get_student_fio()
 
+    def terminated(self):
+        self.terminate = True
+        self.close()
+
     def closeEvent(self, event):
+        if self.terminate:
+            self.terminate = False
+            event.accept()
+
+
         # Предупреждение при закрытии окна
         reply = QMessageBox.question(
             self,

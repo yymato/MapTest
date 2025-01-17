@@ -1,16 +1,17 @@
 import shutil
 import sqlite3
 
-# Импортируем функции для работы с изображениями в базе данных
-from files.main_files.database.database_images import load_pixmap_from_db, save_pixmap_to_db
-# Импортируем пользовательский интерфейс главного окна
-from files.creator_files.creator_ui_py_files.creator_ui import Ui_MainWindow
+from PyQt6.QtCore import pyqtSignal
 # Импортируем необходимые модули PyQt6
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox
-from PyQt6.QtCore import pyqtSignal
+
+from files.creator_files.create_project import ProjectCreateWindow
+# Импортируем пользовательский интерфейс главного окна
+from files.creator_files.creator_ui_py_files.creator_ui import Ui_MainWindow
 from files.creator_files.question import IconQuestion
 from files.main_files.compiled_path_fuction import resource_path
-from files.creator_files.create_project import ProjectCreateWindow
+# Импортируем функции для работы с изображениями в базе данных
+from files.main_files.database.database_images import load_pixmap_from_db, save_pixmap_to_db
 
 
 class CreatorWindow(QMainWindow, Ui_MainWindow):
@@ -39,6 +40,7 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         self.icon_positions = {}  # Словарь для хранения координат иконок
         self.con = None  # Объект соединения с базой данных
         self.cur = None  # Объект курсора базы данных
+        self.terminate = False
 
     def load_test(self):
         """Загрузка теста из базы данных и отображение связанных элементов."""
@@ -134,8 +136,17 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
                         icon.show()
                         self.icon_positions[icon] = (corrected_x, corrected_y)
 
+    def terminated(self):
+        self.terminate = True
+        self.close()
+
     def closeEvent(self, event):
         """Обработчик закрытия окна с предупреждением."""
+
+        if self.terminate:
+            event.accept()
+            self.terminate = False
+
         reply = QMessageBox.question(
             self,
             "Подтверждение закрытия",

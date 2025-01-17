@@ -6,7 +6,7 @@ from PyQt6.QtGui import QPixmap, QMouseEvent  # Работа с изображе
 
 class ImageLabel(QLabel):
     # Определение пользовательского сигнала, который будет испускаться при установке изображения
-    SettingImage = pyqtSignal()
+    UpdateImage = pyqtSignal()
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         """Обработка события двойного клика мыши по QLabel."""
@@ -34,9 +34,9 @@ class ImageLabel(QLabel):
                 self.setContentsMargins(x_offset, y_offset, x_offset, y_offset)
 
                 # Испускаем пользовательский сигнал, чтобы уведомить об установке изображения
-                self.SettingImage.emit()
+                self.UpdateImage.emit()
 
-    def my_pixmap(self, fname):
+    def set_my_image(self, fname):
         """Установка изображения в QLabel по указанному пути."""
         if fname:  # Проверяем, что путь к файлу не пустой
             pixmap = QPixmap(fname)  # Создаем QPixmap из файла
@@ -57,3 +57,4 @@ class ImageLabel(QLabel):
             self.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Центрируем изображение внутри QLabel
             # Устанавливаем отступы для центрирования, если изображение меньше QLabel
             self.setContentsMargins(x_offset, y_offset, x_offset, y_offset)
+            self.UpdateImage.emit()

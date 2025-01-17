@@ -10,24 +10,30 @@ from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from PyQt6.QtCore import pyqtSignal
 from files.creator_files.question import IconQuestion
 from files.main_files.compiled_path_fuction import resource_path
+from files.creator_files.create_project import ProjectCreateWindow
 
 
 class CreatorWindow(QMainWindow, Ui_MainWindow):
     # Сигнал для оповещения о закрытии окна
     close_window = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, new_project=False):
         super().__init__(parent)
         self.setupUi(self)  # Инициализация интерфейса
+        self.show()
         self.icon_path = resource_path("files/images/icon.png")  # Путь к изображению иконки по умолчанию
 
+        if new_project:
+            self.create_project = ProjectCreateWindow()
+            self.create_project.show()
+            self.create_project.successful_save_project.connect(self.save_test)
+
         # Подключение сигналов к обработчикам
-        self.choose_variant_question_button.clicked.connect(self.add_icon)
+        self.choose_question_button.clicked.connect(self.add_icon)
         self.input_question_button.clicked.connect(self.add_icon)
         self.updated_question_button.clicked.connect(self.add_icon)
 
-        self.image_label.SettingImage.connect(self.save_image)
-        self.load_test_button.clicked.connect(self.load_test)
+        self.image_label.UpdateImage.connect(self.update_image)
 
         self.icon_positions = {}  # Словарь для хранения координат иконок
         self.con = None  # Объект соединения с базой данных
@@ -162,14 +168,20 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         icon.show()
         self.icon_positions[icon] = (10, 10)  # Сохраняем координаты иконки
 
-    def save_image(self):
+    def update_image(self):
+        self.con.cursor().execute('DELETE FROM main_image')
+        self.con.cursor().execute('INSERT INTO main_image(image) VALUES (?)',
+                                  (save_pixmap_to_db(self.image_label.pixmap()),))
+        self.con.commit()
+
+    def save_test(self):
         """Сохранение изображения и создание таблицы, если она отсутствует."""
-        if self.con is None:
-            path_to_table = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "SQL Files (*.sqlite)")[0]
-            if path_to_table:
-                shutil.copyfile(resource_path('files/main_files/database/save_test.sqlite'), path_to_table, follow_symlinks=True)
-                self.con = sqlite3.connect(path_to_table)
-                self.cur = self.con.cursor()
+
+        shutil.copyfile(resource_path('files/main_files/database/save_test.sqlite'),
+                        self.create_project.get_project_path(), follow_symlinks=True)
+        self.con = sqlite3.connect(self.create_project.get_project_path())
+        self.cur = self.con.cursor()
+        self.image_label.set_my_image(self.create_project.get_image_path())
         self.con.cursor().execute('DELETE FROM main_image')
         self.con.cursor().execute('INSERT INTO main_image(image) VALUES (?)',
                                   (save_pixmap_to_db(self.image_label.pixmap()),))
@@ -188,4 +200,3 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         corrected_y = icon_position.y() - offset_y
 
         self.icon_positions[icon] = (corrected_x, corrected_y)
-        print("Сохраненные координаты иконки:", self.icon_positions)

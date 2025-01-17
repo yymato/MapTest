@@ -3,7 +3,7 @@ import sqlite3
 import xlsxwriter
 from PyQt6.QtWidgets import QApplication, QMainWindow, QFileDialog
 from files.testing_system_files.main_testing_window import MainTestingWindow
-from files.main_files.ui_py_files.main_ui import Ui_MainWindow
+from files.main_files.ui_py_files.main_ui_V1 import Ui_MainWindow
 from files.creator_files.creator import CreatorWindow
 from files.main_files.interpreter_result_files.interpreter_result import InterpreterResultWindow
 
@@ -23,9 +23,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.creator = None
         self.test = None
         self.interpreter = None
-        self.create_testButton.clicked.connect(self.create_test)
-        self.starting_testButton.clicked.connect(self.starting_test)
-        self.interpreter_result_button.clicked.connect(self.interpreter_result)
+        self.create_test_button.clicked.connect(self.create_test)
+        self.start_button.clicked.connect(self.start_test)
+        self.get_result_button.clicked.connect(self.get_result)
+        self.change_test_button.clicked.connect(self.change_test)
 
         self.is_open = False
 
@@ -34,13 +35,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Открывает окно для создания нового теста.
         """
         if not self.is_open:
-            self.creator = CreatorWindow(self)
+            self.creator = CreatorWindow(self, new_project=True)
             self.creator.close_window.connect(self.closed_window)
-
-            self.creator.show()
             self.is_open = True
 
-    def starting_test(self):
+    def change_test(self, path=None):
+        pass
+
+
+    def start_test(self):
         """
         Открывает окно для прохождения теста.
         """
@@ -51,7 +54,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.test.show()
             self.is_open = True
 
-    def interpreter_result(self):
+    def get_result(self):
         if not self.is_open:
             self.interpreter = InterpreterResultWindow()
             self.interpreter.close_window.connect(self.closed_window)

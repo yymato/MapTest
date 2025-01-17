@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1202</width>
+    <width>1144</width>
     <height>824</height>
    </rect>
   </property>
@@ -25,19 +25,6 @@
     </property>
     <property name="text">
      <string>Нажмите, чтобы выбрать картику</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="load_test_button">
-    <property name="geometry">
-     <rect>
-      <x>1040</x>
-      <y>10</y>
-      <width>121</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Загрузить тест</string>
     </property>
    </widget>
    <widget class="QPushButton" name="updated_question_button">
@@ -85,7 +72,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1202</width>
+     <width>1144</width>
      <height>21</height>
     </rect>
    </property>

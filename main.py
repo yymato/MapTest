@@ -1,7 +1,9 @@
+import os
 import sys
 
 from PyQt6.QtWidgets import QApplication, QMainWindow
 
+from files.CONSTANT import HISTORY_PATH_PROJECT, HISTORY_PATH_ANSWERS, HISTORY_PATH_IMAGES
 from files.creator_files.creator import CreatorWindow
 from files.main_files.interpreter_result_files.interpreter_result import InterpreterResultWindow
 from files.main_files.ui_py_files.main_ui_V1 import Ui_MainWindow
@@ -10,7 +12,7 @@ from files.testing_system_files.main_testing_window import MainTestingWindow
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
-    Главное окно приложения для работы с тестами.
+    Главное окно приложения
     """
 
     def __init__(self):
@@ -27,6 +29,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.start_button.clicked.connect(self.start_test)
         self.get_result_button.clicked.connect(self.get_result)
         self.change_test_button.clicked.connect(self.change_test)
+
+        # Проверяем что папка существует
+        if not os.path.exists(os.path.dirname(HISTORY_PATH_PROJECT)):
+            os.makedirs(os.path.dirname(HISTORY_PATH_PROJECT))
+
+        # Создаем Файлы для хранения истории вводимых путей и для истории проектов.
+
+        for PATH in [HISTORY_PATH_PROJECT, HISTORY_PATH_ANSWERS, HISTORY_PATH_IMAGES]:
+            if not os.path.exists(PATH):
+                op = open(PATH, 'x')
+                op.close()
 
         self.is_open = False
 

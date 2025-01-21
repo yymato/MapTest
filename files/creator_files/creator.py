@@ -28,7 +28,7 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
             self.create_project = ProjectCreateWindow()
             self.create_project.show()
             self.create_project.successful_save_project.connect(self.save_test)
-            self.create_project.cancel_save_project.connect(self.cancel_signal)
+            self.create_project.cancel_save_project.connect(self.terminated)
 
         # Подключение сигналов к обработчикам
         self.choose_question_button.clicked.connect(self.add_icon)
@@ -212,6 +212,3 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         corrected_y = icon_position.y() - offset_y
 
         self.icon_positions[icon] = (corrected_x, corrected_y)
-
-    def cancel_signal(self):
-        self.close()

@@ -187,7 +187,8 @@ class MainTestingWindow(Ui_MainWindow, QMainWindow):
 
         if reply == QMessageBox.StandardButton.Yes:
             event.accept()
-            self.result_con.commit()
+            if not self.result_con is None:
+                self.result_con.commit()
             self.close_window.emit()
         else:
             event.ignore()

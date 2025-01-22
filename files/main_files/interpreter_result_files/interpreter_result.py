@@ -1,8 +1,12 @@
+import io
+import sqlite3
+
 import xlsxwriter
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QFileDialog
+
+from files.CONSTANT import HISTORY_PATH_PROJECT, HISTORY_PATH_ANSWERS
 from files.main_files.interpreter_result_files.interpreter_result_ui_py.interpreter_result_ui import Ui_MainWindow
-import sqlite3
 
 
 class PathError(Exception):
@@ -29,6 +33,103 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
 
         self.is_terminated = False
 
+        self.result_path_combo_box.currentIndexChanged.connect(self.on_result_path_changed)
+        self.answer_path_combo_box.currentIndexChanged.connect(self.on_answer_path_changed)
+        self.question_path_combo_box.currentIndexChanged.connect(self.on_question_path_changed)
+
+        self.update_question_history('init')
+        self.update_answers_history('init')
+        self.update_result_history('init')
+
+    def update_question_history(self, data):
+        if data != 'init':
+            # Обновляем историю для проекта
+            if data:
+                if self.test_db_path != data:  # Предотвращаем повторную запись одинакового пути
+                    self.test_db_path = data
+                    with open(HISTORY_PATH_PROJECT, 'a+') as history_path:
+                        history_path.seek(0)  # Перемещаем указатель в начало файла
+                        paths = history_path.readlines()
+                        if self.test_db_path + '\n' not in paths:  # Если путь еще не в истории
+                            history_path.write(self.test_db_path + '\n')
+
+            # Загружаем и обновляем QComboBox для проектов
+        try:
+            with open(HISTORY_PATH_PROJECT, 'r') as history_path:
+                paths = [line.strip() for line in history_path.readlines()]
+
+            # Удаляем старые элементы и добавляем уникальные последние 10 путей
+            self.question_path_combo_box.clear()
+            for path in paths[-10:][::-1]:
+                if path.strip():
+                    self.question_path_combo_box.addItem(path.strip())
+
+            if data == 'init' or self.test_db_path is None:
+                self.question_path_combo_box.setCurrentIndex(-1)
+        except io.UnsupportedOperation:
+            pass
+
+        self.check_path()
+
+    def update_answers_history(self, data):
+        if data != 'init':
+            if data:
+                if self.answers_db_path != data:  # Предотвращаем повторную запись одинакового пути
+                    self.answers_db_path = data
+                    with open(HISTORY_PATH_ANSWERS, 'a+') as history_path:
+                        history_path.seek(0)  # Перемещаем указатель в начало файла
+                        paths = history_path.readlines()
+                        if self.answers_db_path + '\n' not in paths:  # Если путь еще не в истории
+                            history_path.write(self.answers_db_path + '\n')
+
+        # Загружаем и обновляем QComboBox для изображений
+        try:
+            with open(HISTORY_PATH_ANSWERS, 'r') as history_path:
+                paths = [line.strip() for line in history_path.readlines()]
+
+            # Удаляем старые элементы и добавляем уникальные последние 10 путей
+            self.answer_path_combo_box.clear()
+            for path in paths[-10:][::-1]:
+                if path.strip():
+                    self.answer_path_combo_box.addItem(path.strip())
+
+            if self.answers_db_path is None or data == 'init':
+                self.answer_path_combo_box.setCurrentIndex(-1)
+        except io.UnsupportedOperation:
+            pass
+
+        self.check_path()
+
+    # TODO Сделать проверку на корректность введенных расширений в update_result_history
+    def update_result_history(self, data):
+        if data != 'init':
+            if data:
+                if self.res_path != data:  # Предотвращаем повторную запись одинакового пути
+                    self.res_path = data
+                    with open(HISTORY_PATH_PROJECT, 'a+') as history_path:
+                        history_path.seek(0)  # Перемещаем указатель в начало файла
+                        paths = history_path.readlines()
+                        if self.answers_db_path + '\n' not in paths:  # Если путь еще не в истории
+                            history_path.write(self.res_path + '\n')
+
+        # Загружаем и обновляем QComboBox для изображений
+        try:
+            with open(HISTORY_PATH_PROJECT, 'r') as history_path:
+                paths = [line.strip() for line in history_path.readlines()]
+
+            # Удаляем старые элементы и добавляем уникальные последние 10 путей
+            self.result_path_combo_box.clear()
+            for path in paths[-10:][::-1]:
+                if path.strip():
+                    self.result_path_combo_box.addItem(path.strip())
+
+            if self.res_path is None or data == 'init':
+                self.result_path_combo_box.setCurrentIndex(-1)
+        except io.UnsupportedOperation:
+            pass
+
+        self.check_path()
+
     def choose_question_path(self):
         test_db_path = QFileDialog.getOpenFileName(self, "Открыть файл с тестом", "", "SQL Files (*.sqlite)")[0]
         try:
@@ -40,11 +141,9 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
             if set(map(lambda table: str(*table), tables)) != quest_reference:
                 raise PathError
             else:
-                self.test_db_path = test_db_path
+                self.update_question_history(test_db_path)
         except PathError:
             QMessageBox.warning(self, 'Ошибка', 'Не корректный файл. Возможно, вы выбрали ответы, а не вопросы.')
-
-        self.check_path()
 
     def choose_answer_path(self):
         answers_db_path = QFileDialog.getOpenFileName(self, "Открыть файл с ответами", "", "SQL Files (*.sqlite)")[0]
@@ -55,21 +154,29 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
             if set(map(lambda table: str(*table), tables)) != answer_reference:
                 raise PathError
             else:
-                self.answers_db_path = answers_db_path
+                self.update_answers_history(answers_db_path)
         except PathError:
             QMessageBox.warning(self, 'Ошибка', 'Не корректный файл. Возможно, вы выбрали вопросы, а не ответы.')
 
-        self.check_path()
-
     def choose_result_path(self):
-        self.res_path = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "Excel Files (*.xls, *.xlsx)")[0]
-        self.check_path()
+        res_path = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "Excel Files (*.xlsx)")[0]
+        if res_path:
+            self.update_result_history(res_path)
 
     def check_path(self):
         if self.test_db_path and self.answers_db_path and self.res_path:
             self.get_result_button.setEnabled(True)
         else:
             self.get_result_button.setEnabled(False)
+
+    def on_question_path_changed(self):
+        self.test_db_path = self.question_path_combo_box.currentText()
+
+    def on_answer_path_changed(self):
+        self.answers_db_path = self.answer_path_combo_box.currentText()
+
+    def on_result_path_changed(self):
+        self.res_path = self.result_path_combo_box.currentText()
 
     def get_result(self):
 

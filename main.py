@@ -35,7 +35,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             os.makedirs(os.path.dirname(HISTORY_PATH_PROJECT))
 
         # Создаем Файлы для хранения истории вводимых путей и для истории проектов.
-
+        # TODO Очистку файлов с историей до 10 строк
         for PATH in [HISTORY_PATH_PROJECT, HISTORY_PATH_ANSWERS, HISTORY_PATH_IMAGES]:
             if not os.path.exists(PATH):
                 op = open(PATH, 'x')

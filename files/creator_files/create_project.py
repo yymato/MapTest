@@ -81,7 +81,7 @@ class ProjectCreateWindow(Ui_MainWindow, QMainWindow):
                 if path.strip():
                     self.image_path_combo_box.addItem(path.strip())
 
-            if self.project_path is None or data == 'init':
+            if self.image_path is None or data == 'init':
                 self.image_path_combo_box.setCurrentIndex(-1)
         except io.UnsupportedOperation:
             pass

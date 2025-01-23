@@ -1,3 +1,4 @@
+import os
 import shutil
 import sqlite3
 
@@ -42,9 +43,11 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         self.cur = None  # Объект курсора базы данных
         self.terminate = False
 
+        self.setWindowTitle('Редактирование теста - ' + os.path.basename(path).split('.')[0])
+
     def load_test(self):
         """Загрузка теста из базы данных и отображение связанных элементов."""
-        path_to_test = QFileDialog.getOpenFileName(self, "Открыть файл", "", "SQL Files (*.sqlite)")[0]
+        path_to_test = QFileDialog.getOpenFileName(self, "Открыть файл", "", "Test Files (*.sqlite)")[0]
         if path_to_test:
             self.con = sqlite3.connect(path_to_test)  # Устанавливаем соединение с базой данных
             self.cur = self.con.cursor()

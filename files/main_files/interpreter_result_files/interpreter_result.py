@@ -5,7 +5,7 @@ import xlsxwriter
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QFileDialog
 
-from files.CONSTANT import HISTORY_PATH_PROJECT, HISTORY_PATH_ANSWERS
+from files.CONSTANT import HISTORY_PATH_QUESTION, HISTORY_PATH_ANSWERS
 from files.main_files.interpreter_result_files.interpreter_result_ui_py.interpreter_result_ui import Ui_MainWindow
 
 
@@ -47,7 +47,7 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
             if data:
                 if self.test_db_path != data:  # Предотвращаем повторную запись одинакового пути
                     self.test_db_path = data
-                    with open(HISTORY_PATH_PROJECT, 'a+') as history_path:
+                    with open(HISTORY_PATH_QUESTION, 'a+') as history_path:
                         history_path.seek(0)  # Перемещаем указатель в начало файла
                         paths = history_path.readlines()
                         if self.test_db_path + '\n' not in paths:  # Если путь еще не в истории
@@ -55,7 +55,7 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
 
             # Загружаем и обновляем QComboBox для проектов
         try:
-            with open(HISTORY_PATH_PROJECT, 'r') as history_path:
+            with open(HISTORY_PATH_QUESTION, 'r') as history_path:
                 paths = [line.strip() for line in history_path.readlines()]
 
             # Удаляем старые элементы и добавляем уникальные последние 10 путей
@@ -106,7 +106,7 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
             if data:
                 if self.res_path != data:  # Предотвращаем повторную запись одинакового пути
                     self.res_path = data
-                    with open(HISTORY_PATH_PROJECT, 'a+') as history_path:
+                    with open(HISTORY_PATH_QUESTION, 'a+') as history_path:
                         history_path.seek(0)  # Перемещаем указатель в начало файла
                         paths = history_path.readlines()
                         if self.answers_db_path + '\n' not in paths:  # Если путь еще не в истории
@@ -114,7 +114,7 @@ class InterpreterResultWindow(QMainWindow, Ui_MainWindow):
 
         # Загружаем и обновляем QComboBox для изображений
         try:
-            with open(HISTORY_PATH_PROJECT, 'r') as history_path:
+            with open(HISTORY_PATH_QUESTION, 'r') as history_path:
                 paths = [line.strip() for line in history_path.readlines()]
 
             # Удаляем старые элементы и добавляем уникальные последние 10 путей

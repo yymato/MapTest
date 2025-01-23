@@ -18,13 +18,13 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
     # Сигнал для оповещения о закрытии окна
     close_window = pyqtSignal()
 
-    def __init__(self, parent=None, new_project=False):
+    def __init__(self, parent=None, path=None):
         super().__init__(parent)
         self.setupUi(self)  # Инициализация интерфейса
         self.show()
         self.icon_path = resource_path("files/images/icon.png")  # Путь к изображению иконки по умолчанию
 
-        if new_project:
+        if path is None:
             self.create_project = ProjectCreateWindow()
             self.create_project.show()
             self.create_project.successful_save_project.connect(self.save_test)

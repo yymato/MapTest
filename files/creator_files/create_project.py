@@ -3,7 +3,7 @@ import io
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 
-from files.CONSTANT import HISTORY_PATH_PROJECT, HISTORY_PATH_IMAGES
+from files.CONSTANT import HISTORY_PATH_QUESTION, HISTORY_PATH_IMAGES, HISTORY_PATH_PROJECT
 from files.creator_files.creator_ui_py_files.create_project_ui import Ui_MainWindow
 
 
@@ -37,7 +37,7 @@ class ProjectCreateWindow(Ui_MainWindow, QMainWindow):
             if data:
                 if self.project_path != data:  # Предотвращаем повторную запись одинакового пути
                     self.project_path = data
-                    with open(HISTORY_PATH_PROJECT, 'a+') as history_path:
+                    with open(HISTORY_PATH_QUESTION, 'a+') as history_path:
                         history_path.seek(0)  # Перемещаем указатель в начало файла
                         paths = history_path.readlines()
                         if self.project_path + '\n' not in paths:  # Если путь еще не в истории
@@ -45,7 +45,7 @@ class ProjectCreateWindow(Ui_MainWindow, QMainWindow):
 
             # Загружаем и обновляем QComboBox для проектов
         try:
-            with open(HISTORY_PATH_PROJECT, 'r') as history_path:
+            with open(HISTORY_PATH_QUESTION, 'r') as history_path:
                 paths = [line.strip() for line in history_path.readlines()]
 
             # Удаляем старые элементы и добавляем уникальные последние 10 путей
@@ -120,6 +120,20 @@ class ProjectCreateWindow(Ui_MainWindow, QMainWindow):
     def closeEvent(self, event):
         if not (self.project_path and self.image_path and self.name_line_edit.text()):
             self.cancel_save_project.emit()
+        else:
+            with open(HISTORY_PATH_PROJECT, 'a+') as history_path:
+                history_path.seek(0)  # Перемещаем указатель в начало файла
+                paths = history_path.readlines()
+                if self.project_path + '\n' not in paths:  # Если путь еще не в истории
+                    history_path.write(self.project_path + '\n')
+                else:
+                    # Удаляем путь из списка и добавляем его в конец
+                    paths.remove(self.project_path + '\n')
+                    paths.append(self.project_path + '\n')
+                    # Перемещаем указатель в начало и перезаписываем файл
+                    history_path.seek(0)
+                    history_path.truncate()
+                    history_path.writelines(paths)
 
         event.accept()
 

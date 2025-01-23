@@ -4,7 +4,7 @@ import sqlite3
 
 from PyQt6.QtCore import pyqtSignal
 # Импортируем необходимые модули PyQt6
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QMessageBox
 
 from files.creator_files.create_project import ProjectCreateWindow
 # Импортируем пользовательский интерфейс главного окна
@@ -25,11 +25,7 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         self.show()
         self.icon_path = resource_path("files/images/icon.png")  # Путь к изображению иконки по умолчанию
 
-        if path is None:
-            self.create_project = ProjectCreateWindow()
-            self.create_project.show()
-            self.create_project.successful_save_project.connect(self.save_test)
-            self.create_project.cancel_save_project.connect(self.terminated)
+        self.path = path
 
         # Подключение сигналов к обработчикам
         self.choose_question_button.clicked.connect(self.add_icon)
@@ -42,102 +38,107 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         self.con = None  # Объект соединения с базой данных
         self.cur = None  # Объект курсора базы данных
         self.terminate = False
+        if self.path is None:
+            self.create_project = ProjectCreateWindow()
+            self.create_project.show()
+            self.create_project.successful_save_project.connect(self.save_test)
+            self.create_project.cancel_save_project.connect(self.terminated)
+        else:
+            self.load_test()
 
         self.setWindowTitle('Редактирование теста - ' + os.path.basename(path).split('.')[0])
 
     def load_test(self):
         """Загрузка теста из базы данных и отображение связанных элементов."""
-        path_to_test = QFileDialog.getOpenFileName(self, "Открыть файл", "", "Test Files (*.sqlite)")[0]
-        if path_to_test:
-            self.con = sqlite3.connect(path_to_test)  # Устанавливаем соединение с базой данных
-            self.cur = self.con.cursor()
+        self.con = sqlite3.connect(self.path)  # Устанавливаем соединение с базой данных
+        self.cur = self.con.cursor()
 
-            # Устанавливаем изображение из базы данных на главную метку
-            self.image_label.my_pixmap(
-                load_pixmap_from_db(*self.cur.execute('SELECT image FROM main_image').fetchone())
-            )
+        # Устанавливаем изображение из базы данных на главную метку
+        self.image_label.set_my_image(
+            load_pixmap_from_db(*self.cur.execute('SELECT image FROM main_image').fetchone())
+        )
 
-            # Рассчитываем смещение изображения относительно области метки
-            label_rect = self.image_label.rect()  # Размер области метки
-            pixmap_rect = self.image_label.pixmap().rect()  # Размер изображения
-            offset_x = (label_rect.width() - pixmap_rect.width()) // 2
-            offset_y = (label_rect.height() - pixmap_rect.height()) // 2
+        # Рассчитываем смещение изображения относительно области метки
+        label_rect = self.image_label.rect()  # Размер области метки
+        pixmap_rect = self.image_label.pixmap().rect()  # Размер изображения
+        offset_x = (label_rect.width() - pixmap_rect.width()) // 2
+        offset_y = (label_rect.height() - pixmap_rect.height()) // 2
 
-            # Обрабатываем данные из таблицы main_ids
-            request = self.con.cursor().execute('SELECT * from main_ids')
-            for i in request:
-                # Вопрос с выбором варианта(ов) ответа(ов)
-                if i[2] == 2:
-                    for data in self.con.cursor().execute(
-                            'SELECT x, y, quest, answer, image FROM question_data WHERE type = 2'):
-                        value = int(self.con.execute('SELECT value FROM question_values WHERE question_main_id = ?',
-                                                     (i[0],)).fetchall()[0][0])
-                        x, y, text_question, answer, bytes_image = data
-                        pixmap_image = load_pixmap_from_db(bytes_image)
+        # Обрабатываем данные из таблицы main_ids
+        request = self.con.cursor().execute('SELECT * from main_ids')
+        for i in request:
+            # Вопрос с выбором варианта(ов) ответа(ов)
+            if i[2] == 2:
+                for data in self.con.cursor().execute(
+                        'SELECT x, y, quest, answer, image FROM question_data WHERE type = 2'):
+                    value = int(self.con.execute('SELECT value FROM question_values WHERE question_main_id = ?',
+                                                 (i[0],)).fetchall()[0][0])
+                    x, y, text_question, answer, bytes_image = data
+                    pixmap_image = load_pixmap_from_db(bytes_image)
 
-                        # Создаем иконку и задаем ей параметры
-                        icon = IconQuestion(self.image_label, self, self.icon_path, self.con, self.cur)
-                        icon.setting_question_maket("Запись ответа")
-                        icon.question.question_plain_text.setPlainText(text_question)
-                        icon.question.answer_line_edit.setText(answer)
-                        icon.question.image_label.setPixmap(pixmap_image)
-                        icon.question.value_spinbox.setValue(value)
-                        icon.question.main_id = i[0]
+                    # Создаем иконку и задаем ей параметры
+                    icon = IconQuestion(self.image_label, self, self.icon_path, self.con, self.cur)
+                    icon.setting_question_maket("Запись ответа")
+                    icon.question.question_plain_text.setPlainText(text_question)
+                    icon.question.answer_line_edit.setText(answer)
+                    icon.question.image_label.setPixmap(pixmap_image)
+                    icon.question.value_spinbox.setValue(value)
+                    icon.question.main_id = i[0]
 
-                        # Учитываем смещение изображения
-                        corrected_x = x + offset_x
-                        corrected_y = y + offset_y
-                        icon.move(corrected_x, corrected_y)
-                        icon.show()
-                        self.icon_positions[icon] = (corrected_x, corrected_y)
+                    # Учитываем смещение изображения
+                    corrected_x = x + offset_x
+                    corrected_y = y + offset_y
+                    icon.move(corrected_x, corrected_y)
+                    icon.show()
+                    self.icon_positions[icon] = (corrected_x, corrected_y)
 
-                # Вопрос с развернутым ответом
-                elif i[2] == 1:
-                    for data in self.con.cursor().execute(
-                            'SELECT x, y, quest, answer, image FROM question_data WHERE type = 1'):
-                        x, y, text_question, answer, bytes_image = data
-                        pixmap_image = load_pixmap_from_db(bytes_image)
-                        # Создаем иконку и задаем ей параметры
-                        icon = IconQuestion(self.image_label, self, self.icon_path, self.con, self.cur)
-                        icon.setting_question_maket('Развернутый ответ (проверяется вручную)')
-                        icon.question.main_id = i[0]
-                        icon.question.question_plain_text.setPlainText(text_question)
-                        icon.question.image_label.setPixmap(pixmap_image)
+            # Вопрос с развернутым ответом
+            elif i[2] == 1:
+                for data in self.con.cursor().execute(
+                        'SELECT x, y, quest, answer, image FROM question_data WHERE type = 1'):
+                    x, y, text_question, answer, bytes_image = data
+                    pixmap_image = load_pixmap_from_db(bytes_image)
+                    # Создаем иконку и задаем ей параметры
+                    icon = IconQuestion(self.image_label, self, self.icon_path, self.con, self.cur)
+                    icon.setting_question_maket('Развернутый ответ (проверяется вручную)')
+                    icon.question.main_id = i[0]
+                    icon.question.question_plain_text.setPlainText(text_question)
+                    icon.question.image_label.setPixmap(pixmap_image)
 
-                        # Учитываем смещение изображения
-                        corrected_x = x + offset_x
-                        corrected_y = y + offset_y
-                        icon.move(corrected_x, corrected_y)
-                        icon.show()
-                        self.icon_positions[icon] = (corrected_x, corrected_y)
+                    # Учитываем смещение изображения
+                    corrected_x = x + offset_x
+                    corrected_y = y + offset_y
+                    icon.move(corrected_x, corrected_y)
+                    icon.show()
+                    self.icon_positions[icon] = (corrected_x, corrected_y)
 
-                # Вопрос с выбором правильных и неправильных ответов
-                else:
-                    for data in self.con.cursor().execute(
-                            'SELECT x, y, quest, correct_answers, incorrect_answers, image FROM choice_question_data'):
-                        value = int(self.con.execute('SELECT value FROM question_values WHERE question_main_id = ?',
-                                                     (i[0],)).fetchall()[0][0])
+            # Вопрос с выбором правильных и неправильных ответов
+            else:
+                for data in self.con.cursor().execute(
+                        'SELECT x, y, quest, correct_answers, incorrect_answers, image FROM choice_question_data'):
+                    value = int(self.con.execute('SELECT value FROM question_values WHERE question_main_id = ?',
+                                                 (i[0],)).fetchall()[0][0])
 
-                        x, y, text_question, correct_answers, incorrect_answers, bytes_image = data
-                        correct_answers = correct_answers.split('↑♛')
-                        incorrect_answers = incorrect_answers.split('↑♛')
-                        pixmap_image = load_pixmap_from_db(bytes_image)
+                    x, y, text_question, correct_answers, incorrect_answers, bytes_image = data
+                    correct_answers = correct_answers.split('↑♛')
+                    incorrect_answers = incorrect_answers.split('↑♛')
+                    pixmap_image = load_pixmap_from_db(bytes_image)
 
-                        # Создаем иконку и задаем ей параметры
-                        icon = IconQuestion(self.image_label, self, self.icon_path, self.con, self.cur)
-                        icon.setting_question_maket('Выбор варианта(ов) ответа(ов)')
-                        icon.question.question_plain_text.setPlainText(text_question)
-                        icon.question.image_label.setPixmap(pixmap_image)
-                        icon.question.load_variants(correct_answers, incorrect_answers)
-                        icon.question.value_spinbox.setValue(value)
-                        icon.question.main_id = i[0]
+                    # Создаем иконку и задаем ей параметры
+                    icon = IconQuestion(self.image_label, self, self.icon_path, self.con, self.cur)
+                    icon.setting_question_maket('Выбор варианта(ов) ответа(ов)')
+                    icon.question.question_plain_text.setPlainText(text_question)
+                    icon.question.image_label.setPixmap(pixmap_image)
+                    icon.question.load_variants(correct_answers, incorrect_answers)
+                    icon.question.value_spinbox.setValue(value)
+                    icon.question.main_id = i[0]
 
-                        # Учитываем смещение изображения
-                        corrected_x = x + offset_x
-                        corrected_y = y + offset_y
-                        icon.move(corrected_x, corrected_y)
-                        icon.show()
-                        self.icon_positions[icon] = (corrected_x, corrected_y)
+                    # Учитываем смещение изображения
+                    corrected_x = x + offset_x
+                    corrected_y = y + offset_y
+                    icon.move(corrected_x, corrected_y)
+                    icon.show()
+                    self.icon_positions[icon] = (corrected_x, corrected_y)
 
     def terminated(self):
         self.terminate = True

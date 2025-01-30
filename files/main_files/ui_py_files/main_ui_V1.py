@@ -87,7 +87,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "MapTest"))
         self.label.setText(_translate("MainWindow", "Создание тестов"))
         self.create_test_button.setText(_translate("MainWindow", "Новый тест"))
         self.change_test_button.setText(_translate("MainWindow", "Редактировать тест"))

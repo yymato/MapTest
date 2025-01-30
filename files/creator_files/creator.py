@@ -46,7 +46,7 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         else:
             self.load_test()
 
-        self.setWindowTitle('Редактирование теста - ' + os.path.basename(path).split('.')[0])
+
 
     def load_test(self):
         """Загрузка теста из базы данных и отображение связанных элементов."""
@@ -139,7 +139,7 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
                     icon.move(corrected_x, corrected_y)
                     icon.show()
                     self.icon_positions[icon] = (corrected_x, corrected_y)
-
+        self.setWindowTitle('Редактирование теста - ' + os.path.basename(self.path).split('.')[0])
     def terminated(self):
         self.terminate = True
         self.close()
@@ -202,7 +202,8 @@ class CreatorWindow(QMainWindow, Ui_MainWindow):
         self.con.cursor().execute('INSERT INTO main_image(image) VALUES (?)',
                                   (save_pixmap_to_db(self.image_label.pixmap()),))
         self.con.commit()
-
+        self.setWindowTitle(
+            'Редактирование теста - ' + os.path.basename(self.create_project.get_project_path()).split('.')[0])
     def save_icon_position(self, icon):
         """Сохранение координат иконки относительно изображения."""
         icon_position = icon.pos()  # Локальные координаты иконки
